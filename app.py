@@ -124,7 +124,7 @@ category는 식비, 카페, 교통, 쇼핑, 생활, 문화, 기타 중 하나입
 with st.sidebar:
     st.title("🤖 에이블")
     st.caption("나만의 AI 생활 비서")
-    menu = st.radio("메뉴", ["💬 AI 챗봇", "📰 경제뉴스 브리핑", "🔮 에이블철학관", "💰 에이블 머니가든"])
+    menu = st.radio("메뉴", ["💬 AI 챗봇", "📰 경제뉴스 브리핑", "🔮 에이블철학관", "💰 에이블 머니가든", "👗 에이블 옷장"])
     st.divider()
     st.caption("OpenAI API 사용료가 발생할 수 있습니다.")
 
@@ -343,3 +343,197 @@ elif menu == "💰 에이블 머니가든":
         c3.metric("예상 합계", f"{future:,.0f}원")
         st.caption("매월 말 납입·월복리 가정. 세금, 수수료, 물가 변동은 제외한 예시이며 수익은 보장되지 않습니다.")
         st.caption("저축 목표와 현재 저축액은 세션에만 저장됩니다. 다시 방문하면 재입력해 주세요.")
+
+        
+# =====================================================
+# 5. 에이블 옷장 - 날씨별 옷차림 추천
+# =====================================================
+
+elif menu == "👗 에이블 옷장":
+
+    st.title("👗 에이블 옷장")
+    st.write("오늘 날씨에 딱 맞는 옷차림을 추천해 드려요! 🌷")
+
+    city = st.text_input(
+        "📍 날씨를 확인할 지역을 입력하세요",
+        value="서울",
+        placeholder="예: 서울, 부산, 이천"
+    )
+
+    if st.button("🌤️ 오늘 뭐 입지?", type="primary"):
+
+        with st.spinner("오늘의 날씨를 확인하고 있어요..."):
+
+            try:
+                # 1. 지역 이름을 위도·경도로 변환
+                geo_url = "https://geocoding-api.open-meteo.com/v1/search"
+
+                geo_response = requests.get(
+                    geo_url,
+                    params={
+                        "name": city.strip(),
+                        "count": 10,
+                        "language": "ko",
+                        "format": "json"
+                    },
+                    timeout=15
+                )
+                geo_response.raise_for_status()
+
+                locations = geo_response.json().get("results", [])
+
+                # 대한민국 지역 우선
+                korean_locations = [
+                    loc for loc in locations
+                    if loc.get("country_code") == "KR"
+                ]
+
+                if not korean_locations:
+                    st.warning("지역을 찾지 못했어요. 다른 지역명을 입력해 주세요.")
+
+                else:
+                    location = korean_locations[0]
+
+                    latitude = location["latitude"]
+                    longitude = location["longitude"]
+
+                    # 2. 실시간 날씨 조회
+                    weather_url = "https://api.open-meteo.com/v1/forecast"
+
+                    weather_response = requests.get(
+                        weather_url,
+                        params={
+                            "latitude": latitude,
+                            "longitude": longitude,
+                            "current": (
+                                "temperature_2m,"
+                                "apparent_temperature,"
+                                "relative_humidity_2m,"
+                                "precipitation,"
+                                "weather_code,"
+                                "wind_speed_10m"
+                            ),
+                            "timezone": "Asia/Seoul"
+                        },
+                        timeout=15
+                    )
+                    weather_response.raise_for_status()
+
+                    current = weather_response.json()["current"]
+
+                    temp = current["temperature_2m"]
+                    feels = current["apparent_temperature"]
+                    humidity = current["relative_humidity_2m"]
+                    rain = current["precipitation"]
+                    wind = current["wind_speed_10m"]
+                    code = current["weather_code"]
+
+                    st.success(
+                        f"📍 {location['name']}의 현재 날씨"
+                    )
+
+                    # 3. 날씨 정보 표시
+                    col1, col2, col3 = st.columns(3)
+
+                    with col1:
+                        st.write("🌡️ 현재 기온")
+                        st.subheader(f"{temp:.1f}°C")
+
+                    with col2:
+                        st.write("🧣 체감온도")
+                        st.subheader(f"{feels:.1f}°C")
+
+                    with col3:
+                        st.write("💨 풍속")
+                        st.subheader(f"{wind:.1f} km/h")
+
+                    st.write(f"💧 습도: {humidity}%")
+                    st.write(f"🌧️ 현재 강수량: {rain} mm")
+
+                    st.divider()
+
+                    # 4. 체감온도 기준 옷차림 추천
+                    if feels >= 28:
+                        outfit = "민소매, 반팔, 반바지, 얇은 원피스"
+                        outer = "별도의 아우터는 필요하지 않아요."
+                        emoji = "☀️"
+
+                    elif feels >= 23:
+                        outfit = "반팔 티셔츠, 얇은 셔츠, 면바지"
+                        outer = "실내 냉방 대비 얇은 가디건"
+                        emoji = "🌤️"
+
+                    elif feels >= 20:
+                        outfit = "긴팔 티셔츠, 얇은 니트, 청바지"
+                        outer = "얇은 가디건이나 셔츠"
+                        emoji = "🌷"
+
+                    elif feels >= 17:
+                        outfit = "맨투맨, 니트, 긴바지"
+                        outer = "가디건이나 가벼운 재킷"
+                        emoji = "🍂"
+
+                    elif feels >= 12:
+                        outfit = "니트, 맨투맨, 긴바지"
+                        outer = "트렌치코트, 자켓, 경량패딩"
+                        emoji = "🧥"
+
+                    elif feels >= 6:
+                        outfit = "기모 맨투맨, 두꺼운 니트, 긴바지"
+                        outer = "코트, 두꺼운 재킷, 경량패딩"
+                        emoji = "🧣"
+
+                    else:
+                        outfit = "히트텍, 기모 상의, 두꺼운 바지"
+                        outer = "롱패딩, 두꺼운 코트, 목도리, 장갑"
+                        emoji = "❄️"
+
+                    st.subheader(f"{emoji} 오늘의 추천 코디")
+
+                    st.info(f"👕 추천 의상: {outfit}")
+                    st.info(f"🧥 아우터: {outer}")
+
+                    # 5. 날씨별 추가 준비물
+                    st.subheader("🎒 오늘의 준비물")
+
+                    items = []
+
+                    if code in [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82]:
+                        items.append("☔ 우산과 방수 신발")
+
+                    if code in [71, 73, 75, 77, 85, 86]:
+                        items.append("🧤 장갑과 미끄럼 방지 신발")
+
+                    if code in [95, 96, 99]:
+                        items.append("⛈️ 천둥번개에 주의하고 실외 활동을 줄이세요.")
+
+                    if wind >= 25:
+                        items.append("💨 바람막이 또는 방풍 재킷")
+
+                    if feels <= 5:
+                        items.append("🧣 목도리, 장갑, 핫팩")
+
+                    if temp >= 28:
+                        items.append("🧴 물병, 모자, 자외선 차단제")
+
+                    if not items:
+                        items.append("🍀 편안한 신발과 좋은 기분!")
+
+                    for item in items:
+                        st.write(item)
+
+                    st.divider()
+                    st.caption(
+                        "현재 날씨 기준의 참고용 추천입니다. "
+                        "외출 시간의 예보와 개인의 추위·더위 민감도에 따라 조절하세요."
+                    )
+
+            except requests.RequestException:
+                st.error(
+                    "날씨 서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요."
+                )
+
+            except (KeyError, ValueError, TypeError):
+                st.error(
+                    "날씨 데이터를 읽지 못했어요. 다시 시도해 주세요."
+                )

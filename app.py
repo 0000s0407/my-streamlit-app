@@ -889,23 +889,16 @@ if "messages" not in st.session_state:
 st.markdown(
     """
     <div class="hero">
-        <div class="eyebrow">
-            AIVLE SCHOOL / DIGITAL WHITEPAPER
-        </div>
-
-        <div class="hero-title">
-            에이블 백서
-        </div>
-
+        <div class="eyebrow">AIVLE SCHOOL / DIGITAL WHITEPAPER</div>
+        <div class="hero-title">에이블 백서</div>
         <div class="hero-desc">
-            교육과정과 프로젝트 경험을 연결하는 지식 플랫폼.
+            교육과정과 프로젝트 경험을 연결하는 지식 플랫폼.<br>
             근거 있는 답변과 개인화된 학습 방향을 제공합니다.
         </div>
     </div>
     """,
     unsafe_allow_html=True
 )
-
 
 # ==================================================
 # 18. 서비스 카드

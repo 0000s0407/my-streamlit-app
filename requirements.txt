@@ -1,4 +1,9 @@
+%%writefile requirements.txt
 streamlit
-openai
-requests
-pandas
+langchain-openai
+langchain-chroma
+langchain-core
+langchain-text-splitters
+langchain-pymupdf4llm
+pymupdf4llm
+chromadb

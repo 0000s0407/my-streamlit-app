@@ -1,8 +1,8 @@
-streamlit
-langchain-openai
-langchain-chroma
-langchain-core
-langchain-text-splitters
+streamlit>=1.38,<2
+langchain-openai>=0.3,<2
+langchain-chroma>=0.2,<2
+langchain-core>=0.3,<2
+langchain-text-splitters>=0.3,<2
 langchain-pymupdf4llm
 pymupdf4llm
 chromadb
